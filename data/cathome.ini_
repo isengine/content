@@ -1,0 +1,79 @@
+{
+	
+	"names" : "",
+	"parent" : "catalog",
+	"type" : null,
+	
+	"hash" : "content-navigation_",
+	
+	"display" : {
+		"count" : {
+			"all" : 10,
+			"list" : 4
+		},
+		"skip" : {
+			"all" : 0,
+			"list" : 0
+		},
+		"sort" : {
+			"all" : null,
+			"list" : null
+		},
+		
+		"classes" : {
+			"common" : "cathome",
+			"parent" : "cathome__",
+			"list" : "cathome_list",
+			"all" : "cathome_all",
+			"alone" : "cathome_alone",
+			"empty" : "cathome_empty",
+			"item" : "cathome_item"
+		},
+		"elements" : null
+	},
+	
+	"empty" : {
+		
+		"enable" : true,
+		
+		"labels" : {
+			"alone" : "Такой новости не существует!",
+			"all" : "Данный раздел пуст",
+			"list" : "Данный раздел пуст",
+			"alone_link" : "Назад к списку",
+			"all_link" : "Вернуться назад",
+			"list_link" : "Вернуться назад"
+		},
+		"classes" : {
+			"common" : "content__container",
+			"label" : "content__container",
+			"link" : "content_"
+		}
+		
+	},
+	
+	"wrapper" : {
+		"enable" : null
+	},
+	
+	"top" : {
+		"enable" : null
+	},
+	
+	"navigation" : {
+		"enable" : null
+	},
+	
+	"filtration" : {
+		"enable" : null
+	},
+	
+	"media" : {
+		"enable" : null
+	},
+	
+	"images" : {
+	// настройки для автоподстановки изображений - см. функцию dataImage
+	}
+	
+}

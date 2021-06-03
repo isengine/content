@@ -1,0 +1,171 @@
+{
+	
+	"names" : "",
+	"parent" : null,
+	"type" : null,
+	
+	"hash" : "content-navigation_",
+	
+	"display" : {
+		"count" : {
+			"all" : 0,
+			"list" : 10
+		},
+		"skip" : {
+			"all" : 0,
+			"list" : 0
+		},
+		"sort" : {
+			"all" : null,
+			"list" : null
+		},
+		
+		"classes" : {
+			"common" : "content__container",
+			"parent" : "content_",
+			"list" : "content__list",
+			"all" : "content__all",
+			"alone" : "content__alone",
+			"empty" : "content__empty",
+			"item" : "content__item"
+		},
+		"elements" : null
+		//common, item, wrapper with string or subelements as all, list, alone
+		//default is div
+	},
+	
+	"empty" : {
+		
+		"enable" : true,
+		
+		"labels" : {
+			"alone" : "Такой новости не существует!",
+			"all" : "Данный раздел пуст",
+			"list" : "Данный раздел пуст",
+			"alone_link" : "Назад к списку",
+			"all_link" : "Вернуться назад",
+			"list_link" : "Вернуться назад"
+		},
+		"classes" : {
+			"common" : "content__container",
+			"label" : "content__container",
+			"link" : "content_"
+		}
+		
+	},
+	
+	"wrapper" : {
+		
+		"enable" : true,
+		
+		"classes" : {
+			"common" : "content__container",
+			"parent" : "content_",
+			"list" : "content__list",
+			"all" : "content__all",
+			"alone" : "content__alone"
+		}
+		
+	},
+	
+	"top" : {
+		"enable" : true,
+		"type" : "date",
+		"value" : "modify:1:month",
+		"limit" : 0,
+		"list" : true,
+		"delete" : false,
+		"mark" : "top:1",
+		"sort" : false,
+		
+		"classes" : {
+			"item" : "content__top--item",
+			"inner" : "content__top--inner",
+			"link" : "content__button"
+		}
+	},
+	
+	"navigation" : {
+		"enable" : true,
+		
+		// can set alone/all/list arrays for split settings group
+		
+		"position" : true, // null or false is custom/after/before/both=true
+		"pages" : 7,
+		"active" : null, // display or not current page
+		"noempty" : null, // no display empty navigation elements
+		
+		"custom" : null, // or array with custom "extreme:first", "navigation:previous", "pages", "navigation:next", "extreme:last", "position:list", "position:all"
+		
+		"labels" : { // array or true/null/false/names/content and content:... for select one of content as content:data:title/lang as true
+			"previous" : "prev",
+			"next" : "next",
+			"first" : "first",
+			"last" : "last",
+			"list" : "list",
+			"all" : "all"
+		},
+		
+		"classes" : {
+			"common" : "button",
+			"pages" : "button_page",
+			"active" : "button_page--active",
+			"disable" : "button--disable",
+			"extreme" : "button_extreme",
+			"navigation" : "button_nav",
+			"previous" : "button_nav--prev",
+			"next" : "button_nav--next",
+			"first" : "button_extreme--min",
+			"last" : "button_extreme--max",
+			"list" : "button_list",
+			"all" : "button_all",
+			"item" : "button--item",
+			"wrapper" : "button--wrapper"
+		}
+	},
+	
+	"filtration" : {
+		"enable" : null,
+		// can set alone/all/list arrays for split settings group
+		"position" : true, // null or false is custom/after/before=true/both
+		"filter" : {
+			"field_name" : "type" // type is select/and/or/multi/search/numeric/range/range_bootstrap/range_jqueryui/buttons/buttons_after
+		},
+		"options" : {
+			"auto" : true,
+			"ajax" : null,
+			"labels" : true,
+			"wrapper" : true,
+			"reset" : true,
+			"items" : "1:5:20"
+		},
+		"classes" : {
+			"common" : "filter",
+			"wrapper" : "filter_wrapper",
+			"label" : "filter_label",
+			"item" : "filter_item",
+			"active" : "filter_item__active",
+			"disable" : "filter_item__disable",
+			"buttons" : "filter_buttons",
+			"reset" : "filter_button__reset",
+			"submit" : "filter_button__submit",
+			"prefixname" : "filtername__",
+			"prefixtype" : "filtertype__",
+			"prefixid" : "filtername__",
+			"prefixlabel" : "filterlabel__"
+		}
+	},
+	
+	"media" : {
+		"enable" : null,
+		"param" : "",
+		"template" : "",
+		"folder" : null, // папки, вложенные в local, в которых искать изображения
+		"options" : {}
+	},
+	
+	"images" : {
+	// настройки для автоподстановки изображений - см. функцию dataImage
+	}
+	
+}
