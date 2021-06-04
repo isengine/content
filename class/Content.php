@@ -5,7 +5,11 @@ namespace is\Masters\Modules\Isengine;
 use is\Helpers\System;
 use is\Helpers\Objects;
 use is\Helpers\Strings;
+use is\Helpers\Parser;
+use is\Helpers\Prepare;
+use is\Helpers\Local;
 
+use is\Components\Config;
 use is\Components\Collection;
 use is\Components\Router;
 use is\Components\Uri;
@@ -15,10 +19,18 @@ use is\Parents\Data;
 use is\Masters\Modules\Master;
 use is\Masters\View;
 use is\Masters\Database;
+use is\Masters\Datasheet;
 
 class Content extends Master {
 	
-	public $current;
+	public $current; // название текущего материала
+	public $parents; // путь к родителям
+	
+	public $cache; // путь к кэшу
+	
+	public $list;
+	public $count;
+	public $position;
 	
 	public function launch() {
 		
@@ -26,69 +38,133 @@ class Content extends Master {
 		
 		$this -> data = new Collection;
 		
-		$this -> read($sets['custom']);
-		$this -> sort($sets['sort']);
-		$this -> limit($sets['skip'], $sets['limit']);
+		$this -> check();
+		
+		$result = null;
+		
+		if ($sets['cache']) {
+			$this -> setCache();
+			$result = $this -> readCache();
+		}
+		
+		if (!$result) {
+			$this -> read();
+			$this -> sort($sets['sort']);
+			$this -> list = $this -> data -> getNames();
+			$this -> count = $this -> data -> count();
+			$this -> limit($sets['skip'], $sets['limit']);
+		}
+		
+		if ($sets['cache']) {
+			$this -> writeCache();
+		}
+		
+		$this -> position();
+		
 		$this -> sort($sets['sort-after']);
 		
 		//echo '<pre>';
 		//echo print_r($this -> data, 1);
 		//echo '</pre>';
 		
-		//$state = $this -> someMethod();
-
 	}
 	
-	public function read($sets = null) {
+	public function check() {
 		
-		$db = Database::getInstance();
+		$router = Router::getInstance();
+		
+		$this -> parents = $this -> settings['parents'] ? $this -> settings['parents'] : Strings::join($router -> content['parents'], ':');
+		
+		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : $router -> content['item'];
+		
+	}
+	
+	public function setCache() {
+		
+		if (!$this -> parents) {
+			return;
+		}
+		
+		$config = Config::getInstance();
+		$parent = Strings::before($this -> parents, ':');
+		$hash = Prepare::hash(Parser::toJson([
+			'name'     => $this -> current,
+			'parents'  => $this -> parents,
+			'database' => $this -> settings['db'],
+			'filter'   => $this -> settings['filter'],
+			'sort'     => $this -> settings['sort'],
+			'skip'     => $this -> settings['skip'],
+			'limit'    => $this -> settings['limit']
+		]));
+		
+		$this -> cache = $config -> get('path:cache') . 'content' . DS . $parent . DS . $hash . '.ini';
+		
+	}
+	
+	public function readCache() {
+		
+		if (!$this -> parents) {
+			return true; // это важно!
+		}
+		
+		if (!Local::matchFile($this -> cache)) {
+			return; // и это важно!
+		}
+		
+		$content = Parser::fromJson( Local::readFile($this -> cache) );
+		if ($content) {
+			$this -> list = $content['list'];
+			$this -> count = $content['count'];
+			$this -> data -> addByList( $content['data'] );
+		}
+		unset($content);
+		
+		return true; // и это!
+		
+	}
+	
+	public function writeCache() {
+		
+		if (!$this -> parents || !$this -> cache) {
+			return;
+		}
+		
+		$content = Parser::toJson([
+			'list' => $this -> list,
+			'count' => $this -> count,
+			'data' => $this -> data -> getData()
+		]);
+		
+		if ($content) {
+			Local::createFolder( Strings::before($this -> cache, DS, true, true) );
+			Local::writeFile($this -> cache, $content);
+		}
+		
+		unset($content);
+		
+	}
+	
+	public function read() {
+		
+		if ($this -> settings['db']) {
+			$db = new Datasheet;
+			$db -> init( $this -> settings['db'] );
+			$db -> query('read');
+			$db -> rights(true);
+			$db -> driver -> parents( $this -> parents );
+		} else {
+			$db = Database::getInstance();
+		}
+		
 		$db -> collection('content');
 		
-		if (System::set($sets)) {
-			
-			if (System::set($sets['name'])) {
-				$this -> current = $sets['name'];
-			} else {
-				$uri = Uri::getInstance();
-				$path = $uri -> path['array'];
-				if (System::typeIterable($path)) {
-					$this -> current = Objects::last($path, 'value');
-				}
-				unset($path, $uri);
-			}
-			
-			$parents = $sets['parents'];
-			if ($parents) {
-				$db -> driver -> filter -> addFilter('parents', '+' . Strings::replace($parents, ':', ':+'));
-			}
-			
-			$db -> launch();
-			
-		} else {
-			
-			$router = Router::getInstance();
-			
-			$name = $router -> content['name'];
-			$last = Objects::last($router -> content['array'], 'value');
-			$parents = Objects::unlast($router -> content['array']);
-			$parents = System::typeIterable($parents) ? Strings::join($parents, ':+') : null;
-			
-			$db -> driver -> filter -> addFilter('parents', '+' . $name . ($parents ? ':+' . $parents : null) . ($last ? ':+' . $last : null));
-			$db -> launch();
-			
-			if (!$db -> data -> getFirstData()) {
-				
-				$db -> clear();
-				
-				$db -> driver -> filter -> addFilter('parents', '+' . $name . ($parents ? ':+' . $parents : null));
-				$db -> collection('content');
-				$db -> launch();
-				
-				$this -> current = $last;
-				
-			}
-			
+		if ($this -> parents) {
+			$db -> driver -> filter -> addFilter('parents', '+' . Strings::replace($this -> parents, ':', ':+'));
 		}
+		if ($this -> current) {
+			$db -> driver -> filter -> addFilter('name', '+' . $this -> current);
+		}
+		$db -> launch();
 		
 		$this -> data -> addByList( $db -> data -> getData() );
 		
@@ -153,6 +229,21 @@ class Content extends Master {
 		//$this -> data -> removeByLen($skip, $limit);
 		$this -> data -> removeByCut($skip, $limit);
 		//$this -> data -> names = Objects::get($this -> data -> names, $skip ? $skip : 0, $limit ? $limit : null);
+		
+	}
+	
+	public function position() {
+		
+		$list = $this -> data -> getNames();
+		
+		if (!$list) {
+			return;
+		}
+		
+		$this -> position = [
+			Objects::first($list, 'key'),
+			Objects::last($list, 'key')
+		];
 		
 	}
 	
