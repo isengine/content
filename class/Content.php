@@ -47,7 +47,7 @@ class Content extends Master {
 		$this -> filter -> excepts($sets['rest']);
 		$this -> filter -> setData($sets['filter']);
 		$this -> filter -> filterRest();
-		ы
+		
 		$this -> check();
 		
 		$result = null;
