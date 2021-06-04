@@ -21,6 +21,8 @@ use is\Masters\View;
 use is\Masters\Database;
 use is\Masters\Datasheet;
 
+use is\Masters\Modules\Isengine\Filter;
+
 class Content extends Master {
 	
 	public $current; // название текущего материала
@@ -32,12 +34,20 @@ class Content extends Master {
 	public $count;
 	public $position;
 	
+	public $filter;
+	
 	public function launch() {
 		
 		$sets = &$this -> settings;
 		
 		$this -> data = new Collection;
 		
+		$this -> filter = new Filter;
+		$this -> filter -> launch();
+		$this -> filter -> excepts($sets['rest']);
+		$this -> filter -> setData($sets['filter']);
+		$this -> filter -> filterRest();
+		ы
 		$this -> check();
 		
 		$result = null;
@@ -91,7 +101,7 @@ class Content extends Master {
 			'name'     => $this -> current,
 			'parents'  => $this -> parents,
 			'database' => $this -> settings['db'],
-			'filter'   => $this -> settings['filter'],
+			'filter'   => $this -> filter -> getData(),
 			'sort'     => $this -> settings['sort'],
 			'skip'     => $this -> settings['skip'],
 			'limit'    => $this -> settings['limit']
@@ -164,6 +174,10 @@ class Content extends Master {
 		if ($this -> current) {
 			$db -> driver -> filter -> addFilter('name', '+' . $this -> current);
 		}
+		
+		$this -> filter -> filtration($db -> driver -> filter);
+		echo print_r($db -> driver -> filter, 1);
+		
 		$db -> launch();
 		
 		$this -> data -> addByList( $db -> data -> getData() );
