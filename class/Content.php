@@ -21,7 +21,8 @@ use is\Masters\View;
 use is\Masters\Database;
 use is\Masters\Datasheet;
 
-use is\Masters\Modules\Isengine\Filter;
+use is\Masters\Modules\Isengine\Content\Filter;
+use is\Masters\Modules\Isengine\Content\Navigate;
 
 class Content extends Master {
 	
@@ -31,10 +32,9 @@ class Content extends Master {
 	public $cache; // путь к кэшу
 	
 	public $list;
-	public $count;
-	public $position;
 	
 	public $filter;
+	public $navigate;
 	
 	public function launch() {
 		
@@ -43,10 +43,9 @@ class Content extends Master {
 		$this -> data = new Collection;
 		
 		$this -> filter = new Filter;
-		$this -> filter -> launch();
-		$this -> filter -> excepts($sets['rest']);
-		$this -> filter -> setData($sets['filter']);
-		$this -> filter -> filterRest();
+		$this -> filter -> init($sets);
+		$this -> filter -> excepts();
+		$this -> filter -> rest();
 		
 		$this -> check();
 		
@@ -61,7 +60,17 @@ class Content extends Master {
 			$this -> read();
 			$this -> sort($sets['sort']);
 			$this -> list = $this -> data -> getNames();
-			$this -> count = $this -> data -> count();
+		}
+		
+		$this -> navigate = new Navigate;
+		$this -> navigate -> init($sets);
+		$this -> navigate -> list($this -> list);
+		$this -> navigate -> current($this -> current);
+		$this -> navigate -> launch();
+		
+		if ($this -> current) {
+			$this -> data -> leaveByName($this -> current);
+		} else {
 			$this -> limit($sets['skip'], $sets['limit']);
 		}
 		
@@ -69,13 +78,15 @@ class Content extends Master {
 			$this -> writeCache();
 		}
 		
-		$this -> position();
-		
 		$this -> sort($sets['sort-after']);
 		
 		//echo '<pre>';
+		//echo $this -> navigate -> get('ses');
 		//echo print_r($this -> data, 1);
+		//echo print_r($this -> navigate, 1);
+		//echo print_r($this, 1);
 		//echo '</pre>';
+		//exit;
 		
 	}
 	
@@ -124,7 +135,6 @@ class Content extends Master {
 		$content = Parser::fromJson( Local::readFile($this -> cache) );
 		if ($content) {
 			$this -> list = $content['list'];
-			$this -> count = $content['count'];
 			$this -> data -> addByList( $content['data'] );
 		}
 		unset($content);
@@ -141,7 +151,6 @@ class Content extends Master {
 		
 		$content = Parser::toJson([
 			'list' => $this -> list,
-			'count' => $this -> count,
 			'data' => $this -> data -> getData()
 		]);
 		
@@ -171,12 +180,8 @@ class Content extends Master {
 		if ($this -> parents) {
 			$db -> driver -> filter -> addFilter('parents', '+' . Strings::replace($this -> parents, ':', ':+'));
 		}
-		if ($this -> current) {
-			$db -> driver -> filter -> addFilter('name', '+' . $this -> current);
-		}
 		
 		$this -> filter -> filtration($db -> driver -> filter);
-		echo print_r($db -> driver -> filter, 1);
 		
 		$db -> launch();
 		
@@ -243,21 +248,6 @@ class Content extends Master {
 		//$this -> data -> removeByLen($skip, $limit);
 		$this -> data -> removeByCut($skip, $limit);
 		//$this -> data -> names = Objects::get($this -> data -> names, $skip ? $skip : 0, $limit ? $limit : null);
-		
-	}
-	
-	public function position() {
-		
-		$list = $this -> data -> getNames();
-		
-		if (!$list) {
-			return;
-		}
-		
-		$this -> position = [
-			Objects::first($list, 'key'),
-			Objects::last($list, 'key')
-		];
 		
 	}
 	

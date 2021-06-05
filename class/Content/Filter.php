@@ -1,6 +1,6 @@
 <?php
 
-namespace is\Masters\Modules\Isengine;
+namespace is\Masters\Modules\Isengine\Content;
 
 use is\Helpers\System;
 use is\Helpers\Objects;
@@ -24,16 +24,19 @@ use is\Masters\Datasheet;
 class Filter extends Data {
 	
 	public $excepts;
+	public $sets;
 	
-	public function launch() {
+	public function init(&$sets) {
 		$this -> excepts = [];
+		$this -> sets = &$sets;
+		$this -> setData($sets['filter']);
 	}
 	
-	public function excepts($except) {
-		$this -> excepts = Objects::add($this -> excepts, Objects::values($except));
+	public function excepts() {
+		$this -> excepts = Objects::add($this -> excepts, Objects::values($this -> sets['rest']));
 	}
 	
-	public function filterRest() {
+	public function rest() {
 		
 		$uri = Uri::getInstance();
 		
