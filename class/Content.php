@@ -223,7 +223,7 @@ class Content extends Master {
 		}
 		
 		if ($type === 'random') {
-			$this -> data -> randomize();
+			$this -> data -> random();
 			return;
 		}
 		
