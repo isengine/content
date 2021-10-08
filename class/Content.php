@@ -171,11 +171,11 @@ class Content extends Master {
 			$db -> query('read');
 			$db -> rights(true);
 			$db -> driver -> parents( $this -> parents );
+			$db -> collection($this -> settings['db']['collection']);
 		} else {
 			$db = Database::getInstance();
+			$db -> collection('content');
 		}
-		
-		$db -> collection('content');
 		
 		if ($this -> parents) {
 			$db -> driver -> filter -> addFilter('parents', '+' . Strings::replace($this -> parents, ':', ':+'));
