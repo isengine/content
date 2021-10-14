@@ -23,7 +23,6 @@ use is\Masters\Datasheet;
 
 use is\Masters\Modules\Isengine\Content\Filter;
 use is\Masters\Modules\Isengine\Content\Navigate;
-use is\Masters\Modules\Isengine\Content\Map;
 
 class Content extends Master {
 	
@@ -31,7 +30,6 @@ class Content extends Master {
 	public $parents; // путь к родителям
 	
 	public $list;
-	public $map;
 	
 	public $filter;
 	public $navigate;
@@ -53,12 +51,7 @@ class Content extends Master {
 		$this -> sort($sets['sort']);
 		$this -> list = $this -> data -> getNames();
 		
-		
-		$this -> map = new Map;
-		$this -> map -> init($sets);
-
-		$this -> data -> countMap(true);
-		$this -> map -> total($this -> data -> map -> total());
+		//$this -> data -> countMap(true);
 		
 		$this -> navigate = new Navigate;
 		$this -> navigate -> init($sets);

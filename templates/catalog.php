@@ -16,8 +16,12 @@ $sets = &$object -> settings;
 //$object -> eget('container') -> close(true);
 //$object -> eget('container') -> print();
 
+//$object -> data -> countMap(true);
 
+//System::debug($object -> map -> getData());
+System::debug($object -> getData());
 
+return;
 ?>
 
 <?php
