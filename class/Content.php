@@ -23,15 +23,15 @@ use is\Masters\Datasheet;
 
 use is\Masters\Modules\Isengine\Content\Filter;
 use is\Masters\Modules\Isengine\Content\Navigate;
+use is\Masters\Modules\Isengine\Content\Map;
 
 class Content extends Master {
 	
 	public $current; // название текущего материала
 	public $parents; // путь к родителям
 	
-	public $cache; // путь к кэшу
-	
 	public $list;
+	public $map;
 	
 	public $filter;
 	public $navigate;
@@ -49,18 +49,16 @@ class Content extends Master {
 		
 		$this -> check();
 		
-		$result = null;
+		$this -> read();
+		$this -> sort($sets['sort']);
+		$this -> list = $this -> data -> getNames();
 		
-		if ($sets['cache']) {
-			$this -> setCache();
-			$result = $this -> readCache();
-		}
 		
-		if (!$result) {
-			$this -> read();
-			$this -> sort($sets['sort']);
-			$this -> list = $this -> data -> getNames();
-		}
+		$this -> map = new Map;
+		$this -> map -> init($sets);
+
+		$this -> data -> countMap(true);
+		$this -> map -> total($this -> data -> map -> total());
 		
 		$this -> navigate = new Navigate;
 		$this -> navigate -> init($sets);
@@ -72,10 +70,6 @@ class Content extends Master {
 			$this -> data -> leaveByName($this -> current);
 		} else {
 			$this -> limit($sets['skip'], $sets['limit']);
-		}
-		
-		if ($sets['cache']) {
-			$this -> writeCache();
 		}
 		
 		$this -> sort($sets['sort-after']);
@@ -100,69 +94,6 @@ class Content extends Master {
 		
 	}
 	
-	public function setCache() {
-		
-		if (!$this -> parents) {
-			return;
-		}
-		
-		$config = Config::getInstance();
-		$parent = Strings::before($this -> parents, ':');
-		$hash = Prepare::hash(Parser::toJson([
-			'name'     => $this -> current,
-			'parents'  => $this -> parents,
-			'database' => $this -> settings['db'],
-			'filter'   => $this -> filter -> getData(),
-			'sort'     => $this -> settings['sort'],
-			'skip'     => $this -> settings['skip'],
-			'limit'    => $this -> settings['limit']
-		]));
-		
-		$this -> cache = $config -> get('path:cache') . 'content' . DS . $parent . DS . $hash . '.ini';
-		
-	}
-	
-	public function readCache() {
-		
-		if (!$this -> parents) {
-			return true; // это важно!
-		}
-		
-		if (!Local::matchFile($this -> cache)) {
-			return; // и это важно!
-		}
-		
-		$content = Parser::fromJson( Local::readFile($this -> cache) );
-		if ($content) {
-			$this -> list = $content['list'];
-			$this -> data -> addByList( $content['data'] );
-		}
-		unset($content);
-		
-		return true; // и это!
-		
-	}
-	
-	public function writeCache() {
-		
-		if (!$this -> parents || !$this -> cache) {
-			return;
-		}
-		
-		$content = Parser::toJson([
-			'list' => $this -> list,
-			'data' => $this -> data -> getData()
-		]);
-		
-		if ($content) {
-			Local::createFolder( Strings::before($this -> cache, DS, true, true) );
-			Local::writeFile($this -> cache, $content);
-		}
-		
-		unset($content);
-		
-	}
-	
 	public function read() {
 		
 		if ($this -> settings['db']) {
@@ -170,7 +101,6 @@ class Content extends Master {
 			$db -> init( $this -> settings['db'] );
 			$db -> query('read');
 			$db -> rights(true);
-			$db -> driver -> parents( $this -> parents );
 			$db -> collection($this -> settings['db']['collection']);
 		} else {
 			$db = Database::getInstance();

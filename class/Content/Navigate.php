@@ -115,7 +115,7 @@ class Navigate extends Data {
 		
 		$this -> display = Objects::get($this -> list, $this -> from, $this -> count);
 		
-		$this -> pages = ceil(($this -> all - $this -> skip) / $this -> count);
+		$this -> pages = $this -> count ? ceil(($this -> all - $this -> skip) / $this -> count) : null;
 		
 		$this -> sets['skip'] = $this -> skip;
 		$this -> sets['limit'] = $this -> count;
