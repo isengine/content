@@ -9,30 +9,23 @@ use is\Helpers\Strings;
 $instance = $object -> get('instance');
 $sets = &$object -> settings;
 
-//echo print_r($object, 1);
-
 //$object -> eget('container') -> addClass('new');
 //$object -> eget('container') -> open(true);
 //$object -> eget('container') -> close(true);
 //$object -> eget('container') -> print();
 
-//$object -> data -> countMap(true);
-
 //System::debug($object -> map -> getData());
-System::debug($object -> getData());
+//System::debug($object -> getData());
 
-return;
 ?>
 
 <?php
 $object -> data -> iterate(function($item, $key, $position) use ($object) {
+	
 	$name = $item -> getEntryKey('name');
 	$data = $item -> getData();
-	//echo print_r($key, 1) . '<br>';
-	//echo print_r($data, 1) . '<br>';
-	$sets = &$object -> settings;
 	
-	echo print_r($data, 1) . '<br>';
+	System::debug($name, $key, $position, $data);
 	
 });
 ?>

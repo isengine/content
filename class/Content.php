@@ -6,6 +6,7 @@ use is\Helpers\System;
 use is\Helpers\Objects;
 use is\Helpers\Strings;
 use is\Helpers\Parser;
+use is\Helpers\Paths;
 use is\Helpers\Prepare;
 use is\Helpers\Local;
 
@@ -13,6 +14,7 @@ use is\Components\Config;
 use is\Components\Collection;
 use is\Components\Router;
 use is\Components\Uri;
+use is\Components\Cache;
 
 use is\Parents\Data;
 
@@ -38,34 +40,89 @@ class Content extends Master {
 		
 		$sets = &$this -> settings;
 		
-		$this -> data = new Collection;
+		// кэширование
 		
-		$this -> filter = new Filter;
-		$this -> filter -> init($sets);
-		$this -> filter -> excepts();
-		$this -> filter -> rest();
+		$uri = Uri::getInstance();
+		$url = $uri -> path['string'];
 		
-		$this -> check();
+		$config = Config::getInstance();
+		$caching = $config -> get('cache:content');
+		$path = $config -> get('path:cache') . 'content' . DS . ($sets['db']['parents'] ? Paths::toReal($sets['db']['parents']) . DS : null);
+		$original = DR . Paths::toReal($sets['db']['name'] . DS . $sets['db']['collection']);
+
+		$cache = new Cache($path);
+		$cache -> caching($caching);
 		
-		$this -> read();
-		$this -> sort($sets['sort']);
-		$this -> list = $this -> data -> getNames();
+		$cache -> init(
+			$this -> instance,
+			$this -> template,
+			$this -> settings,
+			$url
+		);
 		
-		//$this -> data -> countMap(true);
+		$cache -> compare($original);
 		
-		$this -> navigate = new Navigate;
-		$this -> navigate -> init($sets);
-		$this -> navigate -> list($this -> list);
-		$this -> navigate -> current($this -> current);
-		$this -> navigate -> launch();
+		$data = $cache -> start();
 		
-		if ($this -> current) {
-			$this -> data -> leaveByName($this -> current);
-		} else {
-			$this -> limit($sets['skip'], $sets['limit']);
+		if (!$data) {
+			
+			$this -> data = new Collection;
+			
+			$this -> filter = new Filter;
+			$this -> filter -> init($sets);
+			$this -> filter -> excepts();
+			$this -> filter -> rest();
+			
+			$this -> check();
+			
+			$this -> read();
+			$this -> sort($sets['sort']);
+			$this -> list = $this -> data -> getNames();
+			
+			$this -> navigate = new Navigate;
+			$this -> navigate -> init($sets);
+			$this -> navigate -> list($this -> list);
+			$this -> navigate -> current($this -> current);
+			$this -> navigate -> launch();
+			
+			if ($sets['routing'] && $this -> current) {
+				
+				$name = ($this -> parents ? $this -> parents . ':' : null) . $this -> current;
+				//System::debug($name, '!q');
+				
+				$names = $this -> data -> getNames();
+				$map = $this -> data -> map -> count;
+				
+				if (is_array($names) && Objects::match($names, $name)) {
+					$this -> data -> leaveByName($name);
+				} elseif (is_array($map) && Objects::matchByIndex($map, $name)) {
+					$this -> data -> addFilter('parents', '+' . Strings::replace($name, ':', ':+'));
+					$this -> data -> filtration();
+					$this -> data -> leaveByList($this -> data -> getNames(), 'name');
+				} else {
+					$this -> data -> reset();
+				}
+				
+			} else {
+				$this -> limit($sets['skip'], $sets['limit']);
+			}
+			
+			$this -> sort($sets['sort-after']);
+			$this -> data -> countMap();
+			
+			if ( !System::includes($this -> template, $this -> custom . 'templates', null, $this) ) {
+				if ( !System::includes($this -> template, $this -> path . 'templates', null, $this) ) {
+					if ( !System::includes('default', $this -> custom . 'templates', null, $this) ) {
+						System::includes('default', $this -> path . 'templates', null, $this);
+					}
+				}
+			}
+			
 		}
 		
-		$this -> sort($sets['sort-after']);
+		$cache -> stop();
+		
+		return true;
 		
 		//echo '<pre>';
 		//echo $this -> navigate -> get('ses');
@@ -78,13 +135,9 @@ class Content extends Master {
 	}
 	
 	public function check() {
-		
 		$router = Router::getInstance();
-		
 		$this -> parents = $this -> settings['parents'] ? $this -> settings['parents'] : Strings::join($router -> content['parents'], ':');
-		
-		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : $router -> content['item'];
-		
+		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : $router -> content['name'];
 	}
 	
 	public function read() {
@@ -109,6 +162,7 @@ class Content extends Master {
 		$db -> launch();
 		
 		$this -> data -> addByList( $db -> data -> getData() );
+		$this -> data -> countMap();
 		
 		$db -> clear();
 		unset($db);
@@ -142,7 +196,7 @@ class Content extends Master {
 				$by_data = $sort[1];
 			}
 		} else {
-			$by = 'name';
+			$by = 'id';
 		}
 		
 		if ($type === 'random') {
