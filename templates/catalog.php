@@ -25,7 +25,8 @@ $object -> data -> iterate(function($item, $key, $position) use ($object) {
 	$name = $item -> getEntryKey('name');
 	$data = $item -> getData();
 	
-	System::debug($name, $key, $position, $data);
+	//System::debug($name, $key, $position, $data);
+	System::debug(Strings::join($item -> getEntryKey('parents'), ':'), ' | ', $name, '!q');
 	
 });
 ?>
