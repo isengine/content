@@ -10,13 +10,12 @@ use is\Helpers\Paths;
 use is\Helpers\Prepare;
 use is\Helpers\Local;
 
-use is\Components\Config;
+use is\Components\Cache;
 use is\Components\Collection;
+use is\Components\Config;
+use is\Components\Datetime;
 use is\Components\Router;
 use is\Components\Uri;
-use is\Components\Cache;
-
-use is\Parents\Data;
 
 use is\Masters\Modules\Master;
 use is\Masters\View;
@@ -35,6 +34,10 @@ class Content extends Master {
 	
 	public $filter;
 	public $navigate;
+	
+	public $datetime; // объект Datatime
+	public $tvar; // объект обработчика текстовых переменных
+	public $translit; // объект транслитирования строк
 	
 	public function launch() {
 		
@@ -66,6 +69,18 @@ class Content extends Master {
 		
 		if (!$data) {
 			
+			// Задаем другие базовые свойства
+			
+			$this -> datetime = Datetime::getInstance();
+			$this -> datetime -> setFormat('{a}');
+			
+			$view = View::getInstance();
+			$this -> tvars = $view -> get('tvars');
+			$this -> translit = $view -> get('translit');
+			unset($view);
+			
+			// Создаем контент
+			
 			$this -> data = new Collection;
 			
 			$this -> filter = new Filter;
@@ -96,6 +111,8 @@ class Content extends Master {
 				if (is_array($names) && Objects::match($names, $name)) {
 					$this -> data -> leaveByName($name);
 				} elseif (is_array($map) && Objects::matchByIndex($map, $name)) {
+					$this -> parents .= ':' . $this -> current;
+					$this -> current = null;
 					$this -> data -> addFilter('parents', '+' . Strings::replace($name, ':', ':+'));
 					$this -> data -> filtration();
 					$this -> data -> leaveByList($this -> data -> getNames(), 'name');
@@ -110,13 +127,15 @@ class Content extends Master {
 			$this -> sort($sets['sort-after']);
 			$this -> data -> countMap();
 			
-			if ( !System::includes($this -> template, $this -> custom . 'templates', null, $this) ) {
-				if ( !System::includes($this -> template, $this -> path . 'templates', null, $this) ) {
-					if ( !System::includes('default', $this -> custom . 'templates', null, $this) ) {
-						System::includes('default', $this -> path . 'templates', null, $this);
-					}
-				}
-			}
+			$this -> template();
+			
+			//if ( !System::includes($this -> template, $this -> custom . 'templates', null, $this) ) {
+			//	if ( !System::includes($this -> template, $this -> path . 'templates', null, $this) ) {
+			//		if ( !System::includes('default', $this -> custom . 'templates', null, $this) ) {
+			//			System::includes('default', $this -> path . 'templates', null, $this);
+			//		}
+			//	}
+			//}
 			
 		}
 		
@@ -225,6 +244,37 @@ class Content extends Master {
 		//$this -> data -> removeByLen($skip, $limit);
 		$this -> data -> removeByCut($skip, $limit);
 		//$this -> data -> names = Objects::get($this -> data -> names, $skip ? $skip : 0, $limit ? $limit : null);
+		
+	}
+	
+	public function datetime($item, $format = null) {
+		// возвращает дату в нужном формате
+		// иначе формат даты остается без преобразований
+		// если item = null, вернет текущую метку
+		return $this -> datetime -> convertDate($item, null, $format);
+	}
+	
+	public function tvars(&$item) {
+		// вызывает обработку текстовых переменных для элемента
+		$item = $this -> tvars -> launch($item);
+	}
+	
+	public function translit($item, $to = null, $from = null) {
+		// вызывает транслитирование строки
+		return $this -> translit -> launch($item, $to, $from);
+	}
+	
+	public function iterate() {
+		
+		//System::debug($this -> getData());
+		
+		if (System::set($this -> current)) {
+			$this -> block($this -> instance . ':alone', $this -> data -> getFirst());
+		} else {
+			$this -> data -> iterate(function($item, $key, $pos){
+				$this -> block($this -> instance . ':list', $item);
+			});
+		}
 		
 	}
 	

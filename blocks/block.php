@@ -8,8 +8,8 @@ use is\Helpers\Strings;
 
 use is\Masters\View;
 
-$sets = &$object -> settings;
-$instance = &$object -> instance;
+$sets = &$this -> settings;
+$instance = &$this -> instance;
 
 $view = View::getInstance();
 
