@@ -9,7 +9,7 @@ use is\Helpers\Strings;
 use is\Masters\View;
 
 $sets = &$this -> settings;
-$instance = &$this -> instance;
+$instance = Strings::replace($this -> instance, ':', '-');
 
 $view = View::getInstance();
 

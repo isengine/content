@@ -266,13 +266,13 @@ class Content extends Master {
 	
 	public function iterate() {
 		
-		//System::debug($this -> getData());
+		$instance = Strings::after($this -> instance, ':', null, true);
 		
 		if (System::set($this -> current)) {
-			$this -> block($this -> instance . ':alone', $this -> data -> getFirst());
+			$this -> block($instance . ':alone', $this -> data -> getFirst());
 		} else {
-			$this -> data -> iterate(function($item, $key, $pos){
-				$this -> block($this -> instance . ':list', $item);
+			$this -> data -> iterate(function($item, $key, $pos) use ($instance){
+				$this -> block($instance . ':list', $item);
 			});
 		}
 		

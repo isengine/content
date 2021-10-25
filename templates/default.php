@@ -6,7 +6,7 @@ use is\Helpers\System;
 use is\Helpers\Objects;
 use is\Helpers\Strings;
 
-$instance = $this -> get('instance');
+$instance = Strings::replace($this -> instance, ':', '-');
 $sets = &$this -> settings;
 
 //echo print_r($this, 1);
@@ -15,8 +15,6 @@ $sets = &$this -> settings;
 //$this -> eget('container') -> open(true);
 //$this -> eget('container') -> close(true);
 //$this -> eget('container') -> print();
-
-
 
 ?>
 
