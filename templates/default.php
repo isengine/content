@@ -19,7 +19,7 @@ $sets = &$this -> settings;
 ?>
 
 <?php
-$this -> data -> iterate(function($item, $key, $position) use ($this) {
+$this -> data -> iterate(function($item, $key, $position) {
 	$name = $item -> getEntryKey('name');
 	$data = $item -> getData();
 	//echo print_r($key, 1) . '<br>';

@@ -29,6 +29,7 @@ class Content extends Master {
 	
 	public $current; // название текущего материала
 	public $parents; // путь к родителям
+	public $type; // тип вывода контента - список, один материал или нет материалов
 	
 	public $list;
 	
@@ -55,7 +56,6 @@ class Content extends Master {
 
 		$cache = new Cache($path);
 		$cache -> caching($caching);
-		
 		$cache -> init(
 			$this -> instance,
 			$this -> template,
@@ -126,6 +126,8 @@ class Content extends Master {
 			
 			$this -> sort($sets['sort-after']);
 			$this -> data -> countMap();
+			
+			$this -> type();
 			
 			$this -> template();
 			
@@ -264,16 +266,30 @@ class Content extends Master {
 		return $this -> translit -> launch($item, $to, $from);
 	}
 	
+	public function type() {
+		// определяет тип контента
+		if (System::set($this -> current)) {
+			$this -> type = $this -> data -> getFirst() ? 'alone' : 'none';
+		} else {
+			$this -> type = 'list';
+		}
+	}
+	
 	public function iterate() {
 		
 		$instance = Strings::after($this -> instance, ':', null, true);
 		
-		if (System::set($this -> current)) {
-			$this -> block($instance . ':alone', $this -> data -> getFirst());
+		if (!$this -> type) {
+			return;
 		} else {
-			$this -> data -> iterate(function($item, $key, $pos) use ($instance){
-				$this -> block($instance . ':list', $item);
-			});
+			if ($this -> type === 'list') {
+				$this -> data -> iterate(function($item, $key, $pos) use ($instance){
+					$this -> block($instance . ':' . $this -> type, $item);
+				});
+			} else {
+				$data = $this -> data -> getFirst();
+				$this -> block($instance . ':' . $this -> type, $data);
+			}
 		}
 		
 	}
