@@ -50,7 +50,7 @@ class Content extends Master {
 		$url = $uri -> path['string'];
 		
 		$config = Config::getInstance();
-		$caching = $config -> get('cache:content');
+		$caching = System::exists($sets['cache']) && $sets['cache'] !== 'default' ? $sets['cache'] : $config -> get('cache:content');
 		$path = $config -> get('path:cache') . 'content' . DS . ($sets['db']['parents'] ? Paths::toReal($sets['db']['parents']) . DS : null);
 		$original = DR . Paths::toReal($sets['db']['name'] . DS . $sets['db']['collection']);
 
@@ -277,7 +277,7 @@ class Content extends Master {
 	
 	public function iterate() {
 		
-		$instance = Strings::after($this -> instance, ':', null, true);
+		$instance = $this -> template && $this -> template !== 'default' ? $this -> template : Strings::after($this -> instance, ':', null, true);
 		
 		if (!$this -> type) {
 			return;

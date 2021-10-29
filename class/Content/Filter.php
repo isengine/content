@@ -33,7 +33,7 @@ class Filter extends Data {
 	}
 	
 	public function excepts() {
-		$this -> excepts = Objects::add($this -> excepts, Objects::values($this -> sets['rest']));
+		$this -> excepts = Objects::add($this -> excepts, System::typeIterable($this -> sets['rest']) ? Objects::values($this -> sets['rest']) : []);
 	}
 	
 	public function rest() {
