@@ -69,6 +69,13 @@ class Navigate extends Data {
 	
 	public function launch() {
 		
+		if (
+			!$this -> name_page ||
+			!$this -> name_items
+		) {
+			return;
+		}
+		
 		$this -> all = Objects::len($this -> list);
 		
 		$first = Objects::first($this -> list);

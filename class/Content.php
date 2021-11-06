@@ -157,8 +157,8 @@ class Content extends Master {
 	
 	public function check() {
 		$router = Router::getInstance();
-		$this -> parents = $this -> settings['parents'] ? $this -> settings['parents'] : Strings::join($router -> content['parents'], ':');
-		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : $router -> content['name'];
+		$this -> parents = $this -> settings['parents'] ? $this -> settings['parents'] : ($this -> settings['routing'] ? Strings::join($router -> content['parents'], ':') : null);
+		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : ($this -> settings['routing'] ? $router -> content['name'] : null);
 	}
 	
 	public function read() {
@@ -275,21 +275,38 @@ class Content extends Master {
 		}
 	}
 	
-	public function iterate() {
-		
-		$instance = $this -> template && $this -> template !== 'default' ? $this -> template : Strings::after($this -> instance, ':', null, true);
+	public function iterate($files = null) {
 		
 		if (!$this -> type) {
 			return;
+		}
+		
+		if (!$files) {
+			$files = ($this -> template && $this -> template !== 'default' ? $this -> template : Strings::after($this -> instance, ':', null, true)) . ':' . $this -> type;
+		}
+		
+		if ($this -> type === 'list') {
+			$this -> data -> iterate(function($item, $key, $pos) use ($files){
+				if (System::typeIterable($files)) {
+					foreach ($files as $file) {
+						$this -> block($file, $item);
+					}
+					unset($file);
+				} else {
+					$this -> block($files, $item);
+				}
+			});
 		} else {
-			if ($this -> type === 'list') {
-				$this -> data -> iterate(function($item, $key, $pos) use ($instance){
-					$this -> block($instance . ':' . $this -> type, $item);
-				});
+			$item = $this -> data -> getFirst();
+			if (System::typeIterable($files)) {
+				foreach ($files as $file) {
+					$this -> block($file, $item);
+				}
+				unset($file);
 			} else {
-				$data = $this -> data -> getFirst();
-				$this -> block($instance . ':' . $this -> type, $data);
+				$this -> block($files, $item);
 			}
+			unset($item);
 		}
 		
 	}
