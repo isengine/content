@@ -86,7 +86,10 @@ class Content extends Master {
 			$this -> filter = new Filter;
 			$this -> filter -> init($sets);
 			$this -> filter -> excepts();
-			$this -> filter -> rest();
+			
+			if ($sets['routing']) {
+				$this -> filter -> rest();
+			}
 			
 			$this -> check();
 			
