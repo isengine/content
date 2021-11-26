@@ -170,7 +170,6 @@ class Content extends Master {
 			$db = new Datasheet;
 			$db -> init( $this -> settings['db'] );
 			$db -> query('read');
-			$db -> rights(true);
 			$db -> collection($this -> settings['db']['collection']);
 		} else {
 			$db = Database::getInstance();
