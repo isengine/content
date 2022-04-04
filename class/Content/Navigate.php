@@ -54,6 +54,8 @@ class Navigate extends Data {
 	public $rest; // служебное поле, обозначающее задан ли rest или нужно использовать query
 	public $keys; // служебное поле, обозначающее используются ли ключи для rest
 	
+	// данные из uri, которые имеются в данный момент, их очевидно нужно сохранить
+	
 	public function init(&$sets) {
 		
 		$this -> sets = &$sets;
@@ -178,9 +180,30 @@ class Navigate extends Data {
 		$this -> rest = $uri -> get('rest');
 		$this -> keys = $uri -> get('keys');
 		
+		// важно - сохраняем старые линки
+		
+		$this -> setData($uri -> getData());
+		
 		//echo '<pre>';
 		//echo '[' . print_r($this, 1) . ']';
 		//exit;
+		
+	}
+	
+	public function renderData() {
+		
+		//System::debug($this -> getData());
+		
+		if ($this -> rest) {
+			if ($this -> keys) {
+				$result = Strings::combine($this -> getData(), '/', '/');
+			} else {
+				$result = Strings::join($this -> getData(), '/');
+			}
+			return $result ? $result . '/' : null;
+		} else {
+			return '?' . http_build_query($this -> getData());
+		}
 		
 	}
 	

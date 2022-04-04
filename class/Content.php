@@ -28,11 +28,13 @@ use is\Masters\Modules\Isengine\Content\Navigate;
 
 class Content extends Master {
 	
+	public $name; // полное имя текущего материала, включая его родителей
 	public $current; // название текущего материала
 	public $parents; // путь к родителям
 	public $type; // тип вывода контента - список, один материал или нет материалов
 	
-	public $list;
+	public $list; // список материалов
+	public $map; // карта разделов
 	
 	public $filter;
 	public $navigate;
@@ -136,24 +138,59 @@ class Content extends Master {
 			$this -> sort($sets['sort']);
 			$this -> list = $this -> data -> getNames();
 			
-			$name = $this -> current ? ($this -> parents ? $this -> parents . ':' : null) . $this -> current : null;
+			// было
+			//$name = $this -> current ? ($this -> parents ? $this -> parents . ':' : null) . $this -> current : null;
+			// стало
+			$this -> name();
+			
+			// здесь требуется дополнительная проверка
+			// потому что со вложенными родителями возникает проблема
+			// когда последнего родителя система воспринимает как материал
+			// это естественно, потому что мы не можем сделать точного определения
+			// либо была бы дополнительная нагрузка для каждой страницы -
+			// проверять по всему контенту
+			// поэтому делаем проще
+			// смотрим карту и ищем в ней родителя
+			// и если он есть, то переназначаем current, parents и name
+			
+			if (
+				System::set($this -> name) &&
+				System::typeIterable($this -> map) &&
+				Objects::matchByIndex(
+					$this -> map,
+					$this -> name
+				)
+			) {
+				$this -> parents .= ':' . $this -> current;
+				$this -> current = null;
+				$this -> name();
+				
+				$this -> data -> addFilter('parents', '+' . Strings::replace($this -> parents, ':', ':+'));
+				$this -> data -> filtration();
+				$this -> list = $this -> data -> getNames();
+				$this -> data -> leaveByList($this -> list, 'name');
+			}
+			
+			//System::debug($this);
+			//System::debug($this -> map, '!q');
+			//System::debug($this -> parents, '!q');
+			//System::debug($this -> current, '!q');
+			//System::debug($this -> name, '!q');
 			
 			$this -> navigate = new Navigate;
 			$this -> navigate -> init($sets);
 			$this -> navigate -> list($this -> list);
-			$this -> navigate -> current($name);
+			$this -> navigate -> current($this -> name);
 			$this -> navigate -> launch();
 			
-			if ($sets['routing'] && $name) {
+			if ($sets['routing'] && $this -> name) {
 				
-				$map = $this -> data -> map -> count;
-				
-				if (is_array($this -> list) && Objects::match($this -> list, $name)) {
-					$this -> data -> leaveByName($name);
-				} elseif (is_array($map) && Objects::matchByIndex($map, $name)) {
+				if (is_array($this -> list) && Objects::match($this -> list, $this -> name)) {
+					$this -> data -> leaveByName($this -> name);
+				} elseif (is_array($this -> map) && Objects::matchByIndex($this -> map, $this -> name)) {
 					$this -> parents .= ':' . $this -> current;
 					$this -> current = null;
-					$this -> data -> addFilter('parents', '+' . Strings::replace($name, ':', ':+'));
+					$this -> data -> addFilter('parents', '+' . Strings::replace($this -> name, ':', ':+'));
 					$this -> data -> filtration();
 					$this -> data -> leaveByList($this -> list, 'name');
 				} else {
@@ -211,6 +248,14 @@ class Content extends Master {
 		$this -> current = $this -> settings['name'] ? $this -> settings['name'] : ($this -> settings['routing'] ? $router -> content['name'] : null);
 	}
 	
+	public function map($map) {
+		$this -> map = $map;
+	}
+	
+	public function name() {
+		$this -> name = $this -> current ? ($this -> parents ? $this -> parents . ':' : null) . $this -> current : null;
+	}
+	
 	public function read() {
 		
 		if ($this -> settings['db']) {
@@ -227,10 +272,16 @@ class Content extends Master {
 			$db -> driver -> filter -> addFilter('parents', '+' . Strings::replace($this -> parents, ':', ':+'));
 		}
 		
-		$this -> filter -> filtration($db -> driver -> filter);
-		
+		// 1. $db -> launch(); вверх, т.е. сюда
 		$db -> launch();
 		
+		// 2. получить карту и записать ее в свойство этого класса
+		$db -> data -> countMap();
+		$this -> map($db -> data -> map -> count);
+		
+		// 3. сделать, очевидно здесь, инклюд/эксклюд, т.к. они
+		// влияют на общие настройки контента, но уже после карты,
+		// чтобы определение групп от одиночных материалов точно не сбилось
 		if ($this -> settings['include']) {
 			//System::debug($this -> settings['include']);
 			$db -> data -> leaveByList($this -> settings['include'], 'name');
@@ -245,6 +296,24 @@ class Content extends Master {
 			//System::debug($names);
 			$db -> data -> leaveByList($names, 'name');
 		}
+		
+		// 4. вызвать метод фильтра, который будет собирать данные
+		// для заполнения окна фильтрации, но это только если есть
+		// параметры фильтрации - не путать с параметрами фильтра,
+		// которые задаются для предварительной фильтрации материалов
+		// для вывода вообще в рамках данных настроек модуля
+		$this -> filter -> list($db -> data);
+		
+		// 5. теперь только мы вызываем фильтрацию, но она работает
+		// как постфильтр, в том числе leaveByList и пр.
+		// было
+		//$this -> filter -> filtration($db -> driver -> filter);
+		// стало
+		$this -> filter -> filtration($db -> data);
+		$db -> data -> filtration();
+		$db -> data -> leaveByList($db -> data -> getNames(), 'name');
+		
+		// здесь уже как было
 		
 		$this -> data -> addByList( $db -> data -> getData() );
 		$this -> data -> countMap();
