@@ -8,12 +8,12 @@ use is\Helpers\Strings;
 
 use is\Masters\View;
 
-$sets = &$this -> settings;
-$instance = Strings::replace($this -> instance, ':', '-');
+$sets = &$this->settings;
+$instance = Strings::replace($this->instance, ':', '-');
 
 $view = View::getInstance();
 
 ?>
 <div class="<?= Strings::join($sets['classes'], ' '); ?>">
-	<?= $view -> get('lang|title'); ?>
+    <?= $view->get('lang|title'); ?>
 </div>

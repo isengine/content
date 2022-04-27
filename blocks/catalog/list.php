@@ -8,13 +8,13 @@ use is\Helpers\Strings;
 
 use is\Masters\View;
 
-$sets = &$this -> settings;
-$instance = Strings::after($this -> instance, ':', null, true);
+$sets = &$this->settings;
+$instance = Strings::after($this->instance, ':', null, true);
 
 $view = View::getInstance();
 
 ?>
 <div class="">
-	One of...
-	<?php System::debug($item, '!q'); ?>
+    One of...
+    <?php System::debug($item, '!q'); ?>
 </div>

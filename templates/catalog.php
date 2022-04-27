@@ -6,9 +6,9 @@ use is\Helpers\System;
 use is\Helpers\Objects;
 use is\Helpers\Strings;
 
-$instance = Strings::after($this -> instance, ':', null, true);
+$instance = Strings::after($this->instance, ':', null, true);
 
 ?>
 <div class="<?= $instance; ?>">
-	<?php $this -> iterate(); ?>
+    <?php $this->iterate(); ?>
 </div>
