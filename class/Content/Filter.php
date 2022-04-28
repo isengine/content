@@ -83,7 +83,7 @@ class Filter extends Data
 
     public function list(&$collection)
     {
-        $list = isset($this->sets['filtration']['list']) ? $this->sets['filtration']['list'] : null;
+        $list = !empty($this->sets['filtration']['list']) ? $this->sets['filtration']['list'] : null;
 
         if (!System::typeIterable($list)) {
             return;
@@ -93,21 +93,30 @@ class Filter extends Data
             $data = $item->getData();
 
             Objects::each($list, function($item, $key) use ($data) {
-                $key = Strings::split($key, ':');
+                $key = Objects::createByIndex(
+                    [0, 1],
+                    Strings::split($key, ':')
+                );
                 $type = $key[1];
                 $key = $key[0];
 
-                $value = $data[$key];
-
-                if (!System::set($value)) {
+                if (
+                    !isset($data[$key]) ||
+                    !System::set($data[$key])
+                ) {
                     return;
                 }
+
+                $value = $data[$key];
 
                 if ($type === 'search') {
                     $this->list[$key] = null;
                 } elseif ($type === 'range') {
                     $value = System::typeTo($value, 'numeric');
-                    if (!System::typeIterable($this->list[$key])) {
+                    if (
+                        !isset($this->list[$key]) ||
+                        !System::typeIterable($this->list[$key])
+                    ) {
                         $this->list[$key] = [$value, $value];
                     } elseif ($value < $this->list[$key][0]) {
                         $this->list[$key][0] = $value;
@@ -120,6 +129,7 @@ class Filter extends Data
                     $this->list[$key] = Objects::add($this->list[$key], $value);
                     $this->list[$key] = Objects::unique($this->list[$key]);
                 } elseif (
+                    !isset($this->list[$key]) ||
                     !System::typeIterable($this->list[$key]) ||
                     !Objects::match($this->list[$key], $value)
                 ) {

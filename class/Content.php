@@ -25,6 +25,7 @@ use is\Masters\Datasheet;
 
 use is\Masters\Modules\Isengine\Content\Filter;
 use is\Masters\Modules\Isengine\Content\Navigate;
+use is\Masters\Modules\Isengine\Content\Structure;
 
 class Content extends Master
 {
@@ -38,6 +39,7 @@ class Content extends Master
 
     public $filter;
     public $navigate;
+    public $structure;
 
     public $datetime; // объект Datatime
     public $tvar; // объект обработчика текстовых переменных
@@ -71,26 +73,12 @@ class Content extends Master
 
     public function launch()
     {
-        $sets = Objects::merge(
-            [
-                'cache' => 'default',
-                'db' => [
-                    'name' => null,
-                    'parents' => null,
-                    'collection' => null,
-                    'driver' => null
-                ],
-                'rest' => null,
-                'routing' => null,
-                'filter' => null,
-                'limit' => null,
-                'skip' => null,
-                'sort' => null,
-                'sort-after' => null
-            ],
-            $this->settings,
-            true
-        );
+        $sets = $this->settings;
+
+        // структура данных
+
+        $this->structure = new Structure();
+        $this->structure->init($sets);
 
         // кэширование
 
@@ -111,6 +99,7 @@ class Content extends Master
             $url
         );
 
+        // сравнение под вопросом, т.к. это только для файлов и непонятно, что он проверяет
         $cache->compare($original);
 
         $data = $cache->start();
@@ -257,12 +246,11 @@ class Content extends Master
     public function check()
     {
         $router = Router::getInstance();
-        $name = isset($router->content['name']) ? $router->content['name'] : null;
-        $parents = isset($router->content['parents']) ? $router->content['parents'] : null;
-        $routing = isset($this->settings['routing']) && $this->settings['routing'];
-        
-        $this->parents = isset($this->settings['parents']) && $this->settings['parents'] ? $this->settings['parents'] : ($routing ? Strings::join($parents, ':') : null);
-        $this->current = isset($this->settings['name']) && $this->settings['name'] ? $this->settings['name'] : ($routing ? $name : null);
+        $name = $router->content['name'];
+        $parents = $router->content['parents'];
+
+        $this->parents = $this->settings['parents'] ? $this->settings['parents'] : ($this->settings['routing'] ? Strings::join($parents, ':') : null);
+        $this->current = $this->settings['name'] ? $this->settings['name'] : ($this->settings['routing'] ? $name : null);
     }
 
     public function map($map)
@@ -278,8 +266,9 @@ class Content extends Master
     public function read()
     {
         if (
-            isset($this->settings['db']) &&
-            System::typeOf($this->settings['db'], 'iterable')
+            //System::typeOf($this->settings['db'], 'iterable') &&
+            $this->settings['db']['driver'] &&
+            $this->settings['db']['collection']
         ) {
             $db = new Datasheet;
             $db->init($this->settings['db']);
@@ -304,18 +293,12 @@ class Content extends Master
         // 3. сделать, очевидно здесь, инклюд/эксклюд, т.к. они
         // влияют на общие настройки контента, но уже после карты,
         // чтобы определение групп от одиночных материалов точно не сбилось
-        if (
-            isset($this->settings['include']) &&
-            $this->settings['include']
-        ) {
+        if ($this->settings['include']) {
             //System::debug($this->settings['include']);
             $db->data->leaveByList($this->settings['include'], 'name');
         }
 
-        if (
-            isset($this->settings['exclude']) &&
-            $this->settings['exclude']
-        ) {
+        if ($this->settings['exclude']) {
             $names = Objects::remove(
                 $db->data->getNames(),
                 $this->settings['exclude']
@@ -448,7 +431,13 @@ class Content extends Master
         }
 
         if ($this->type === 'list') {
-            $this->data->iterate(function($item, $key, $pos) use ($files){
+            $this->data->iterate(function ($item, $key, $pos) use ($files) {
+                $item->setData(
+                    Objects::create(
+                        $this->structure->getData(),
+                        $item->getData()
+                    )
+                );
                 if (System::typeIterable($files)) {
                     foreach ($files as $file) {
                         $this->block($file, $item);
@@ -460,6 +449,12 @@ class Content extends Master
             });
         } else {
             $item = $this->data->getFirst();
+            $item->setData(
+                Objects::create(
+                    $this->structure->getData(),
+                    $item->getData()
+                )
+            );
             if (System::typeIterable($files)) {
                 foreach ($files as $file) {
                     $this->block($file, $item);
