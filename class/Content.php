@@ -10,19 +10,16 @@ use is\Helpers\Paths;
 use is\Helpers\Prepare;
 use is\Helpers\Local;
 use is\Helpers\Sessions;
-
 use is\Components\Cache;
 use is\Components\Collection;
 use is\Components\Config;
 use is\Components\Datetime;
 use is\Components\Router;
 use is\Components\Uri;
-
 use is\Masters\Modules\Master;
 use is\Masters\View;
 use is\Masters\Database;
 use is\Masters\Datasheet;
-
 use is\Masters\Modules\Isengine\Content\Filter;
 use is\Masters\Modules\Isengine\Content\Navigate;
 use is\Masters\Modules\Isengine\Content\Structure;
@@ -87,7 +84,13 @@ class Content extends Master
 
         $config = Config::getInstance();
         $caching = $sets['cache'] !== 'default' ? $sets['cache'] : $config->get('cache:content');
-        $path = $config->get('path:cache') . 'content' . DS . ($sets['db']['parents'] ? Paths::toReal($sets['db']['parents']) . DS : null);
+        $path =
+            $config->get('path:cache') . 'content' . DS
+            . (
+                $sets['db']['parents']
+                ? Paths::toReal($sets['db']['parents']) . DS
+                : null
+            );
         $original = DR . Paths::toReal($sets['db']['name'] . DS . $sets['db']['collection']);
 
         $cache = new Cache($path);
@@ -246,11 +249,21 @@ class Content extends Master
     public function check()
     {
         $router = Router::getInstance();
-        $name = $router->content['name'];
-        $parents = $router->content['parents'];
+        if (isset($router->content['name'])) {
+            $name = $router->content['name'];
+        }
+        if (isset($router->content['parents'])) {
+            $parents = $router->content['parents'];
+        }
 
-        $this->parents = $this->settings['parents'] ? $this->settings['parents'] : ($this->settings['routing'] ? Strings::join($parents, ':') : null);
-        $this->current = $this->settings['name'] ? $this->settings['name'] : ($this->settings['routing'] ? $name : null);
+        $this->parents =
+            $this->settings['parents']
+            ? $this->settings['parents']
+            : ($this->settings['routing'] ? Strings::join($parents, ':') : null);
+        $this->current =
+            $this->settings['name']
+            ? $this->settings['name']
+            : ($this->settings['routing'] ? $name : null);
     }
 
     public function map($map)
@@ -270,7 +283,7 @@ class Content extends Master
             $this->settings['db']['driver'] &&
             $this->settings['db']['collection']
         ) {
-            $db = new Datasheet;
+            $db = new Datasheet();
             $db->init($this->settings['db']);
             $db->query('read');
             $db->collection($this->settings['db']['collection']);
@@ -326,7 +339,7 @@ class Content extends Master
 
         // здесь уже как было
 
-        $this->data->addByList( $db->data->getData() );
+        $this->data->addByList($db->data->getData());
         $this->data->countMap();
 
         $db->clear();
@@ -427,7 +440,12 @@ class Content extends Master
         }
 
         if (!$files) {
-            $files = ($this->template && $this->template !== 'default' ? $this->template : Strings::after($this->instance, ':', null, true)) . ':' . $this->type;
+            $files =
+                (
+                    $this->template && $this->template !== 'default'
+                    ? $this->template
+                    : Strings::after($this->instance, ':', null, true)
+                ) . ':' . $this->type;
         }
 
         if ($this->type === 'list') {

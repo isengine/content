@@ -8,14 +8,11 @@ use is\Helpers\Strings;
 use is\Helpers\Parser;
 use is\Helpers\Prepare;
 use is\Helpers\Local;
-
 use is\Components\Config;
 use is\Components\Collection;
 use is\Components\Router;
 use is\Components\Uri;
-
 use is\Parents\Data;
-
 use is\Masters\Modules\Master;
 use is\Masters\View;
 use is\Masters\Database;

@@ -19,7 +19,7 @@ $sets = &$this->settings;
 ?>
 
 <?php
-$this->data->iterate(function($item, $key, $position) {
+$this->data->iterate(function ($item, $key, $position) {
     $name = $item->getEntryKey('name');
     $data = $item->getData();
     //echo print_r($key, 1) . '<br>';
@@ -35,20 +35,20 @@ $this->data->iterate(function($item, $key, $position) {
     <p><?= $sets['key']; ?></p>
 
     <?php
-        if (System::typeIterable($sets['array'])) {
-    ?>
+    if (System::typeIterable($sets['array'])) {
+        ?>
     <ul>
-    <?php
+        <?php
         foreach ($sets['array'] as $item) {
-    ?>
+            ?>
         <li><?= $item; ?></li>
-    <?php
+            <?php
         }
         unset($item);
-    ?>
+        ?>
     </ul>
-    <?php
-        }
+        <?php
+    }
     ?>
 
     <?php $this->block('block'); ?>

@@ -27,7 +27,13 @@ class Structure extends Data
 
         $config = Config::getInstance();
         $caching = $this->settings['cache'] !== 'default' ? $this->settings['cache'] : $config->get('cache:content');
-        $path = $config->get('path:cache') . 'content' . DS . 'structures' . DS . ($this->settings['db']['parents'] ? Paths::toReal($this->settings['db']['parents']) . DS : null);
+        $path =
+            $config->get('path:cache') . 'content' . DS . 'structures' . DS
+            . (
+                $this->settings['db']['parents']
+                ? Paths::toReal($this->settings['db']['parents']) . DS
+                : null
+            );
 
         $cache = new Cache($path);
         $cache->caching($caching);
@@ -64,7 +70,9 @@ class Structure extends Data
             $this->parents = $this->settings['parents'];
         } elseif ($this->settings['routing']) {
             $router = Router::getInstance();
-            $this->parents = Strings::join($router->content['parents'], ':');
+            if (isset($router->content['parents'])) {
+                $this->parents = Strings::join($router->content['parents'], ':');
+            }
         }
 
         if ($this->parents) {
@@ -73,6 +81,9 @@ class Structure extends Data
             $parents = Objects::unlast($parents);
             $this->parents = Strings::join($parents, ':');
         }
-        //$this->parents = $this->settings['parents'] ? $this->settings['parents'] : ($this->settings['routing'] ? Strings::join($parents, ':') : null);
+        //$this->parents =
+        //  $this->settings['parents']
+        //  ? $this->settings['parents']
+        //  : ($this->settings['routing'] ? Strings::join($parents, ':') : null);
     }
 }

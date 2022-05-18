@@ -8,14 +8,11 @@ use is\Helpers\Strings;
 use is\Helpers\Parser;
 use is\Helpers\Prepare;
 use is\Helpers\Local;
-
 use is\Components\Config;
 use is\Components\Collection;
 use is\Components\Router;
 use is\Components\Uri;
-
 use is\Parents\Data;
-
 use is\Masters\Modules\Master;
 use is\Masters\View;
 use is\Masters\Database;
@@ -39,7 +36,7 @@ class Filter extends Data
     *   },
     * ...
     * }
-    * 
+    *
     * в ключах списка можно указать имя:тип
     * имя повторяет ключ данных в материале
     * по-умолчанию тип составляет массив из всех значений
@@ -59,14 +56,17 @@ class Filter extends Data
 
     public function excepts()
     {
-        $this->excepts = Objects::add($this->excepts, System::typeIterable($this->sets['rest']) ? Objects::values($this->sets['rest']) : []);
+        $this->excepts = Objects::add(
+            $this->excepts,
+            System::typeIterable($this->sets['rest']) ? Objects::values($this->sets['rest']) : []
+        );
     }
 
     public function rest()
     {
         $uri = Uri::getInstance();
 
-        Objects::each($uri->getData(), function($item, $key) {
+        Objects::each($uri->getData(), function ($item, $key) {
             if (!Objects::match($this->excepts, $key)) {
                 $this->addDataKey('data:' . $key, $item);
             }
@@ -76,7 +76,7 @@ class Filter extends Data
 
     public function filtration(&$filter)
     {
-        Objects::each($this->getData(), function($item, $key) use ($filter) {
+        Objects::each($this->getData(), function ($item, $key) use ($filter) {
             $filter->addFilter($key, $item);
         });
     }
@@ -89,10 +89,10 @@ class Filter extends Data
             return;
         }
 
-        Objects::each($collection->getData(), function($item) use ($list) {
+        Objects::each($collection->getData(), function ($item) use ($list) {
             $data = $item->getData();
 
-            Objects::each($list, function($item, $key) use ($data) {
+            Objects::each($list, function ($item, $key) use ($data) {
                 $key = Objects::createByIndex(
                     [0, 1],
                     Strings::split($key, ':')
