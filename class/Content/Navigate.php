@@ -96,12 +96,12 @@ class Navigate extends Data
         $this->last = $last['value'];
 
         if ($this->current) {
-            $id = Objects::find($this->list, $this->current);
-            $first = $first['key'];
+            $id = (int) Objects::find($this->list, $this->current);
+            $first = (int) $first['key'];
             if ($id !== $first) {
                 $this->prev = $this->list[$id - 1];
             }
-            $last = $last['key'];
+            $last = (int) $last['key'];
             if ($id !== $last) {
                 $this->next = $this->list[$id + 1];
             }
@@ -149,7 +149,8 @@ class Navigate extends Data
         // в одиночном материале мы математически высчитываем номер страницы в списке
 
         if ($this->current) {
-            $page = floor(($this->id - $this->skip) / $this->count) + 1;
+            //System::debug($this);
+            $page = !empty($this->count) ? floor(($this->id - $this->skip) / $this->count) + 1 : 1;
         }
 
         if (

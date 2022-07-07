@@ -249,12 +249,8 @@ class Content extends Master
     public function check()
     {
         $router = Router::getInstance();
-        if (isset($router->content['name'])) {
-            $name = $router->content['name'];
-        }
-        if (isset($router->content['parents'])) {
-            $parents = $router->content['parents'];
-        }
+        $name = isset($router->content['name']) ? $router->content['name'] : null;
+        $parents = isset($router->content['parents']) ? $router->content['parents'] : null;
 
         $this->parents =
             $this->settings['parents']
@@ -467,6 +463,9 @@ class Content extends Master
             });
         } else {
             $item = $this->data->getFirst();
+            if (!System::set($item)) {
+                return;
+            }
             $item->setData(
                 Objects::create(
                     $this->structure->getData(),
