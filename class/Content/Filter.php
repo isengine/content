@@ -109,6 +109,10 @@ class Filter extends Data
 
                 $value = $data[$key];
 
+                if (!isset($this->list[$key])) {
+                    $this->list[$key] = null;
+                }
+
                 if ($type === 'search') {
                     $this->list[$key] = null;
                 } elseif ($type === 'range') {
@@ -126,7 +130,7 @@ class Filter extends Data
                 } elseif (
                     System::typeOf($value, 'iterable')
                 ) {
-                    $this->list[$key] = Objects::add($this->list[$key], $value);
+                    $this->list[$key] = empty($this->list[$key]) ? $value : Objects::add($this->list[$key], $value);
                     $this->list[$key] = Objects::unique($this->list[$key]);
                 } elseif (
                     !isset($this->list[$key]) ||
